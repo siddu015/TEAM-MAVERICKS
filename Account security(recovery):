@@ -1,0 +1,52 @@
+import random
+
+# Dictionary to store user accounts
+user_accounts = {}
+
+# Dictionary to store account recovery information
+account_recovery = {}
+
+def register(username, password, email, security_question, security_answer):
+    user_accounts[username] = password
+    account_recovery[username] = {'email': email, 'security_question': security_question, 'security_answer': security_answer}
+    print("Registration successful.")
+
+def reset_password(username, recovery_option):
+    if recovery_option == 'email':
+        email = input("Enter the email address associated with your account: ")
+        if email == account_recovery[username]['email']:
+            new_password = generate_password()
+            user_accounts[username] = new_password
+            print("Password reset successful. Your new password is:", new_password)
+        else:
+            print("Email address doesn't match. Password reset failed.")
+    elif recovery_option == 'security_question':
+        security_answer = input(account_recovery[username]['security_question'] + ": ")
+        if security_answer == account_recovery[username]['security_answer']:
+            new_password = generate_password()
+            user_accounts[username] = new_password
+            print("Password reset successful. Your new password is:", new_password)
+        else:
+            print("Security answer doesn't match. Password reset failed.")
+    else:
+        print("Invalid recovery option.")
+
+def generate_password():
+    # Generate a random password
+    characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+    password = ''.join(random.choice(characters) for _ in range(8))
+    return password
+
+# Example usage
+def main():
+    # Register a user account
+    register("user123", "password123", "user123@example.com", "What is your pet's name?", "Fluffy")
+
+    # Reset password using email recovery
+    reset_password("user123", "email")
+
+    # Reset password using security question recovery
+    reset_password("user123", "security_question")
+
+if __name__ == "__main__":
+    main()
