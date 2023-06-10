@@ -1,0 +1,45 @@
+import time
+
+# Dictionary to store user login attempts
+login_attempts = {}
+
+# Maximum number of allowed login attempts
+max_login_attempts = 3
+
+# Lockout duration in seconds
+lockout_duration = 60  # 1 minute
+
+def login(username, password):
+    # Check if user is already locked out
+    if username in login_attempts and login_attempts[username]['locked']:
+        remaining_time = lockout_duration - (time.time() - login_attempts[username]['timestamp'])
+        print(f"Account locked. Try again in {int(remaining_time)} seconds.")
+        return
+
+    # Perform actual login validation here
+    # ...
+
+    # Simulating a failed login attempt
+    print("Login failed.")
+    if username in login_attempts:
+        login_attempts[username]['count'] += 1
+    else:
+        login_attempts[username] = {'count': 1, 'locked': False, 'timestamp': time.time()}
+
+    # Check if maximum login attempts reached
+    if login_attempts[username]['count'] >= max_login_attempts:
+        login_attempts[username]['locked'] = True
+        login_attempts[username]['timestamp'] = time.time()
+        print("Maximum login attempts reached. Account locked for 1 minute.")
+
+# Example usage
+def main():
+    # Simulate multiple login attempts
+    for _ in range(5):
+        username = input("Enter username: ")
+        password = input("Enter password: ")
+        login(username, password)
+        print()
+
+if __name__ == "__main__":
+    main()
