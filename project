@@ -10,115 +10,102 @@ c = conn.cursor()
 c.execute('''CREATE TABLE IF NOT EXISTS users
              (id INTEGER PRIMARY KEY AUTOINCREMENT,
               username TEXT UNIQUE,
-              password TEXT,
-              salt TEXT,
-              locked INTEGER DEFAULT 0,
-              login_attempts INTEGER DEFAULT 0)''')
+              password TEXT)''')
 
-# Register a new user
-def register_user(username, password):
+# User Interface
+def print_menu():
+    print("Password Management Solution")
+    print("1. Register")
+    print("2. Login")
+    print("3. Generate Password")
+    print("4. Reset Password")
+    print("5. Exit")
+
+# User Registration
+def register_user():
+    username = input("Enter username: ")
+    password = input("Enter password: ")
+
     # Check if the username is already taken
     c.execute("SELECT id FROM users WHERE username=?", (username,))
     if c.fetchone():
         print("Username already exists.")
         return
 
-    # Generate salt and hash the password
-    salt = secrets.token_hex(16)
-    hashed_password = hashlib.sha256((password + salt).encode()).hexdigest()
+    # Hash the password
+    hashed_password = hashlib.sha256(password.encode()).hexdigest()
 
     # Insert user data into the database
-    c.execute("INSERT INTO users (username, password, salt) VALUES (?, ?, ?)", (username, hashed_password, salt))
+    c.execute("INSERT INTO users (username, password) VALUES (?, ?)", (username, hashed_password))
     conn.commit()
     print("User registered successfully.")
 
-# Authenticate user login
-def login(username, password):
-    # Check if the user exists
-    c.execute("SELECT id, password, salt, locked FROM users WHERE username=?", (username,))
+# User Login
+def login_user():
+    username = input("Enter username: ")
+    password = input("Enter password: ")
+
+    # Retrieve user data from the database
+    c.execute("SELECT id, password FROM users WHERE username=?", (username,))
     user = c.fetchone()
 
     if user:
-        user_id, hashed_password, salt, locked = user
-        if locked:
-            print("Account locked. Contact the administrator for assistance.")
-            return
+        user_id, hashed_password = user
 
         # Validate the password
-        if hashed_password == hashlib.sha256((password + salt).encode()).hexdigest():
-            # Reset login attempts on successful login
-            c.execute("UPDATE users SET login_attempts=0 WHERE id=?", (user_id,))
-            conn.commit()
+        if hashed_password == hashlib.sha256(password.encode()).hexdigest():
             print("Login successful.")
+            return
         else:
-            # Increment login attempts on failed login
-            c.execute("UPDATE users SET login_attempts=login_attempts+1 WHERE id=?", (user_id,))
-            conn.commit()
             print("Invalid username or password.")
-            check_lockout(username)
     else:
         print("Invalid username or password.")
 
-# Check if the user should be locked out
-def check_lockout(username):
-    c.execute("SELECT login_attempts FROM users WHERE username=?", (username,))
-    login_attempts = c.fetchone()[0]
-    if login_attempts >= 3:
-        c.execute("UPDATE users SET locked=1 WHERE username=?", (username,))
-        conn.commit()
-        print("Maximum login attempts reached. Account locked.")
-
-# Generate a random password
+# Generate Password
 def generate_password(length=12):
     characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*"
     password = ''.join(secrets.choice(characters) for _ in range(length))
     print("Generated password:", password)
 
-# Reset user password
-def reset_password(username, new_password):
-    # Generate salt and hash the new password
-    salt = secrets.token_hex(16)
-    hashed_password = hashlib.sha256((new_password + salt).encode()).hexdigest()
+# Reset Password
+def reset_password():
+    username = input("Enter username: ")
+    new_password = input("Enter new password: ")
+
+    # Hash the new password
+    hashed_password = hashlib.sha256(new_password.encode()).hexdigest()
 
     # Update the user's password in the database
-    c.execute("UPDATE users SET password=?, salt=? WHERE username=?", (hashed_password, salt, username))
+    c.execute("UPDATE users SET password=? WHERE username=?", (hashed_password, username))
     conn.commit()
     print("Password reset successfully.")
-
-# Close database connection
-def close_connection():
-    conn.close()
 
 # Main program
 def main():
     while True:
-        print("1. Register user")
-        print("2. Login")
-        print("3. Generate password")
-        print("4. Reset password")
-        print("5. Quit")
-
+        print_menu()
         choice = input("Enter your choice: ")
 
         if choice == '1':
-            username = input("Enter username: ")
-            password = input("Enter password: ")
-            register_user(username, password)
+            register_user()
         elif choice == '2':
-            username = input("Enter username: ")
-            password = input("Enter password: ")
-            login(username, password)
+            login_user()
         elif choice == '3':
             generate_password()
         elif choice == '4':
-            username = input("Enter username: ")
-            new_password = input("Enter new password: ")
-            reset_password(username, new_password)
+            reset_password()
         elif choice == '5':
-            close_connection()
             break
         else:
             print("Invalid choice. Try again.")
 
+    # Close database connection
+    conn.close()
+
 if __name__ == "__main__":
     main()
+
+
+  
+        
+
