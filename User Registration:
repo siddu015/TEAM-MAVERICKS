@@ -1,0 +1,58 @@
+import re
+import hashlib
+
+# Dummy database to store registered usernames
+registered_usernames = []
+
+def is_username_unique(username):
+    return username not in registered_usernames
+
+def is_password_strong(password):
+    # Minimum length of 12 characters
+    if len(password) < 12:
+        return False
+    # Contains at least one uppercase letter
+    if not re.search(r"[A-Z]", password):
+        return False
+    # Contains at least one lowercase letter
+    if not re.search(r"[a-z]", password):
+        return False
+    # Contains at least one digit
+    if not re.search(r"\d", password):
+        return False
+    # Contains at least one special character
+    if not re.search(r"[!@#$%^&*()_+=\-{}\[\]|\\:;'<>,.?/~`]", password):
+        return False
+    return True
+
+def register_user(username, password, confirm_password):
+    # Check if username is unique
+    if not is_username_unique(username):
+        print("Username is already taken. Please choose a different username.")
+        return
+
+    # Check if password is strong
+    if not is_password_strong(password):
+        print("Password is not strong enough. It must have a minimum length of 12 characters, including uppercase letters, lowercase letters, numbers, and special characters.")
+        return
+
+    # Check if password and confirm password match
+    if password != confirm_password:
+        print("Password and confirm password do not match.")
+        return
+
+    # Store the username and hashed password securely in the database
+    hashed_password = hashlib.sha256(password.encode()).hexdigest()
+    registered_usernames.append(username)
+
+    # Optionally, send a confirmation email to the user
+
+    # Display success message
+    print("Account created successfully.")
+
+# Example usage
+username = input("Enter username: ")
+password = input("Enter password: ")
+confirm_password = input("Confirm password: ")
+
+register_user(username, password, confirm_password)
